@@ -4,9 +4,14 @@ import android.Manifest;
 import android.annotation.SuppressLint;
 import android.app.AlertDialog;
 import android.app.ProgressDialog;
+import android.content.ContentProviderOperation;
+import android.content.ContentProviderResult;
 import android.content.DialogInterface;
+import android.content.OperationApplicationException;
 import android.content.pm.PackageManager;
 import android.os.AsyncTask;
+import android.os.RemoteException;
+import android.provider.ContactsContract;
 import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.FragmentActivity;
@@ -108,6 +113,48 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             mMap.addMarker(new MarkerOptions().position(person).title(list[0]));
             mMap.moveCamera(CameraUpdateFactory.newLatLng(person));
             latl.add(person);
+            ArrayList<ContentProviderOperation> ops = new ArrayList<>();
+            int rawContactInsertIndex = ops.size();
+
+            ops.add(ContentProviderOperation.newInsert(ContactsContract.RawContacts.CONTENT_URI)
+                    .withValue(ContactsContract.RawContacts.ACCOUNT_TYPE, null)
+                    .withValue(ContactsContract.RawContacts.ACCOUNT_NAME, null).build());
+            ops.add(ContentProviderOperation
+                    .newInsert(ContactsContract.Data.CONTENT_URI)
+                    .withValueBackReference(ContactsContract.Data.RAW_CONTACT_ID,rawContactInsertIndex)
+                    .withValue(ContactsContract.Data.MIMETYPE, ContactsContract.CommonDataKinds.StructuredName.CONTENT_ITEM_TYPE)
+                    .withValue(ContactsContract.CommonDataKinds.StructuredName.DISPLAY_NAME, list[0]) // Name of the person
+                    .build());
+            ops.add(ContentProviderOperation
+                    .newInsert(ContactsContract.Data.CONTENT_URI)
+                    .withValueBackReference(ContactsContract.Data.RAW_CONTACT_ID,rawContactInsertIndex)
+                    .withValue(ContactsContract.Data.MIMETYPE, ContactsContract.CommonDataKinds.StructuredName.CONTENT_ITEM_TYPE)
+                    .withValue(ContactsContract.CommonDataKinds.Email.ADDRESS, list[0]) // Name of the person
+                    .withValue(ContactsContract.CommonDataKinds.Email.TYPE, ContactsContract.CommonDataKinds.Email.TYPE_HOME)
+                    .build());
+            ops.add(ContentProviderOperation
+                    .newInsert(ContactsContract.Data.CONTENT_URI)
+                    .withValueBackReference(
+                            ContactsContract.Data.RAW_CONTACT_ID,   rawContactInsertIndex)
+                    .withValue(ContactsContract.Data.MIMETYPE, ContactsContract.CommonDataKinds.Phone.CONTENT_ITEM_TYPE)
+                    .withValue(ContactsContract.CommonDataKinds.Phone.NUMBER, list[2]) // Number of the person
+                    .withValue(ContactsContract.CommonDataKinds.Phone.TYPE, ContactsContract.CommonDataKinds.Phone.TYPE_MOBILE).build()); // Type of mobile number
+            ops.add(ContentProviderOperation
+                    .newInsert(ContactsContract.Data.CONTENT_URI)
+                    .withValueBackReference(
+                            ContactsContract.Data.RAW_CONTACT_ID,   rawContactInsertIndex)
+                    .withValue(ContactsContract.Data.MIMETYPE, ContactsContract.CommonDataKinds.Phone.CONTENT_ITEM_TYPE)
+                    .withValue(ContactsContract.CommonDataKinds.Phone.NUMBER, list[3]) // Number of the person
+                    .withValue(ContactsContract.CommonDataKinds.Phone.TYPE, ContactsContract.CommonDataKinds.Phone.TYPE_HOME).build()); // Type of mobile number
+            try
+            {
+                ContentProviderResult[] res = getContentResolver().applyBatch(ContactsContract.AUTHORITY, ops);
+                System.out.println(res[0]);
+            }
+            catch (RemoteException | OperationApplicationException e)
+            {
+                Toast.makeText(getApplicationContext(),"Contacts Error" , Toast.LENGTH_SHORT).show();
+            }
         }
     }
 
@@ -143,6 +190,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 in.close();
             } catch (MalformedURLException e) {
                 Toast.makeText(getApplicationContext(),"Invalid URL" , Toast.LENGTH_SHORT).show();
+                askUrl();
             } catch (IOException e) {
                 e.printStackTrace();
             }
