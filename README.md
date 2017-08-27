@@ -1,5 +1,4 @@
-# ContactsMap [![Build Status](https://travis-ci.org/nithinmanne/ContactsMap.svg?branch=master](https://travis-ci.org/nithinmanne/ContactsMap)
-
+# ContactsMap [![Build Status](https://travis-ci.org/nithinmanne/ContactsMap.svg?branch=master)](https://travis-ci.org/nithinmanne/ContactsMap)
 This repository contains the source code for the showing contacts on Map (Part 1).
 
 This app is created for an assignment of Programmable and Embedded Systems.
